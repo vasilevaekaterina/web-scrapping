@@ -6,6 +6,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 import time
+from selenium.common.exceptions import NoSuchElementException
+
 
 
 chrome_options = Options()
@@ -40,9 +42,20 @@ for article in articles:
     link = extract_link(article)
     if link:
         title = article.find_element(By.CSS_SELECTOR, ".tm-article-snippet h2 a").text.strip()
-        parsed_articles.append({"title": title, "link": link})
+        try:
+            date_element = article.find_element(By.TAG_NAME, value='time').get_attribute('title')
+            # date_element = article.find_element(By.CSS_SELECTOR, "tm-article-datetime-published").get_attribute('datetime')
+            published_date = date_element.strip() if date_element else 'Нет даты'
+        except NoSuchElementException:
+            published_date = 'Нет даты'
+
+        parsed_articles.append({
+            "title": title,
+            "link": link,
+            "published_date": published_date
+            })
 
 driver.quit()
 
 for art in parsed_articles:
-    print(f"Заголовок: {art['title']}, Ссылка: {art['link']}")
+    print(f"Дата: {art['published_date']}, Заголовок: {art['title']}, Ссылка: {art['link']}")
